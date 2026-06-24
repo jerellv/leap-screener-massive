@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LEAP Screener</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f4f5f7;color:#1a1d23;font-family:'Inter',sans-serif;min-height:100vh;font-size:14px;}
+code,pre,.mono{font-family:'IBM Plex Mono',monospace;}
+input,select,button{font-family:'Inter',sans-serif;outline:none;}
+input:focus,select:focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,0.1)!important;}
+input::placeholder{color:#b0b8c8;}
+
+/* Layout */
+.header{background:#fff;border-bottom:1px solid #e2e6ed;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.main{max-width:1000px;margin:0 auto;padding:28px 20px;}
+
+/* Inputs */
+.field{width:100%;background:#fff;border:1.5px solid #dde2ea;border-radius:8px;padding:11px 14px;color:#1a1d23;font-size:14px;transition:border-color 0.18s;}
+.scan-btn{padding:11px 26px;background:#2563eb;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;letter-spacing:0.02em;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+.scan-btn:hover:not(:disabled){background:#1d4ed8;box-shadow:0 4px 12px rgba(37,99,235,0.25);}
+.scan-btn:disabled{background:#a0aec0;cursor:not-allowed;}
+
+/* Cards */
+.card{background:#fff;border:1px solid #e2e6ed;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.card-header{padding:14px 18px;border-bottom:1px solid #f0f2f5;display:flex;justify-content:space-between;align-items:center;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;}
+.badge-green{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;}
+.badge-red{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
+.badge-yellow{background:#fef9c3;color:#a16207;border:1px solid #fef08a;}
+.badge-blue{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;}
+.badge-gray{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:20px;}
+.tab{padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;border-radius:6px;border:1.5px solid #e2e6ed;color:#64748b;background:#fff;transition:all 0.15s;}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb;}
+.tab:hover:not(.active){background:#f8fafc;color:#1a1d23;}
+
+/* Contract table */
+.chdr{display:grid;grid-template-columns:1.4fr 80px 80px 80px 80px 110px 110px;gap:8px;padding:9px 16px;font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.05em;text-transform:uppercase;border-bottom:1px solid #f0f2f5;background:#fafbfc;border-radius:10px 10px 0 0;}
+.crow{display:grid;grid-template-columns:1.4fr 80px 80px 80px 80px 110px 110px;gap:8px;padding:10px 16px;border-bottom:1px solid #f7f8fa;align-items:center;font-size:12px;cursor:pointer;transition:background 0.1s;}
+.crow:hover{background:#f8fafc;}
+.crow.pass{border-left:3px solid #22c55e;}
+.crow.fail{border-left:3px solid #e2e6ed;}
+.crow.sel{background:#eff6ff!important;border-left:3px solid #2563eb;}
+
+/* Stats grid */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-box{background:#fff;border:1px solid #e2e6ed;border-radius:8px;padding:14px 16px;}
+.stat-label{font-size:11px;font-weight:500;color:#94a3b8;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:5px;}
+.stat-val{font-size:20px;font-weight:700;color:#1a1d23;font-family:'IBM Plex Mono',monospace;}
+.stat-sub{font-size:11px;color:#94a3b8;margin-top:3px;}
+
+/* Gate rows */
+.gate{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #f0f2f5;align-items:flex-start;}
+.gate:last-child{border-bottom:none;}
+.gicon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;font-weight:700;}
+.gicon-pass{background:#dcfce7;color:#15803d;}
+.gicon-fail{background:#fee2e2;color:#dc2626;}
+.gicon-warn{background:#fef9c3;color:#a16207;}
+.gicon-na{background:#f1f5f9;color:#94a3b8;}
+
+/* Detail panel */
+.detail-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #f0f2f5;}
+.detail-cell{padding:13px 16px;border-right:1px solid #f0f2f5;}
+.detail-cell:last-child{border-right:none;}
+.detail-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;}
+.detail-val{font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+
+/* Range bar */
+.range-bar{height:6px;background:#e2e6ed;border-radius:3px;overflow:hidden;margin:6px 0 3px;}
+.range-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+
+/* Info / warn banners */
+.banner{padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.6;margin-bottom:16px;}
+.banner-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;}
+.banner-yellow{background:#fefce8;border:1px solid #fef08a;color:#854d0e;}
+.banner-red{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;}
+.banner-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;}
+
+/* Loading */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #e2e6ed;border-top-color:#2563eb;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+.pbar{height:4px;background:#e2e6ed;border-radius:2px;overflow:hidden;}
+.pfill{height:100%;border-radius:2px;background:#2563eb;transition:width 0.3s;}
+
+/* Debug */
+#debugWrap{margin-top:32px;border-top:1px solid #e2e6ed;padding-top:20px;}
+#debugLog{font-size:11px;line-height:1.9;font-family:'IBM Plex Mono',monospace;background:#1a1d23;color:#64748b;border-radius:8px;padding:14px 16px;max-height:260px;overflow-y:auto;}
+#debugLog .ok{color:#22c55e;}
+#debugLog .err{color:#f87171;}
+#debugLog .warn{color:#fbbf24;}
+#debugLog .val{color:#475569;}
+#debugLog .dim{color:#334155;}
+
+/* Misc */
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:up 0.25s ease;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#f1f5f9;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px;}
+select{background:#fff;border:1.5px solid #dde2ea;border-radius:6px;padding:6px 10px;color:#1a1d23;font-size:12px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div style="font-size:16px;font-weight:700;color:#1a1d23;letter-spacing:-0.01em;">LEAP Screener</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:1px;">Options framework evaluator · Massive</div>
+  </div>
+  <div id="tradierStatus" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8;font-weight:500;">
+    <div id="tradierDot" style="width:7px;height:7px;border-radius:50%;background:#cbd5e1;"></div>
+    Massive
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Server banner -->
+  <div id="serverBanner" class="banner banner-yellow">
+    <span class="spin"></span>Connecting to server...
+  </div>
+
+  <!-- Search bar -->
+  <div style="display:flex;gap:10px;margin-bottom:24px;">
+    <input id="tickerInput" class="field" placeholder="Enter ticker — MSFT, AMZN, LLY, ANET..."
+      style="flex:1;font-size:15px;padding:12px 16px;"
+      onkeydown="if(event.key==='Enter')scan()"/>
+    <button id="scanBtn" class="scan-btn" onclick="scan()" disabled>▶ Scan</button>
+  </div>
+
+  <!-- Error -->
+  <div id="errBox" style="display:none;" class="banner banner-red"></div>
+
+  <!-- Loading -->
+  <div id="loadBox" style="display:none;text-align:center;padding:32px;background:#fff;border-radius:10px;border:1px solid #e2e6ed;margin-bottom:20px;">
+    <div style="color:#64748b;font-size:13px;margin-bottom:12px;"><span class="spin"></span><span id="loadMsg">Fetching...</span></div>
+    <div style="max-width:300px;margin:0 auto;" class="pbar"><div id="pFill" class="pfill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsView" style="display:none;" class="anim">
+
+    <!-- Stock header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:14px;">
+          <div id="rTicker" style="font-size:36px;font-weight:800;color:#1a1d23;letter-spacing:-0.02em;font-family:'IBM Plex Mono',monospace;"></div>
+          <div id="rPrice"  style="font-size:26px;font-weight:700;color:#1a1d23;font-family:'IBM Plex Mono',monospace;"></div>
+          <div id="rChange" style="font-size:13px;font-weight:500;padding:3px 8px;border-radius:5px;"></div>
+        </div>
+        <div id="rDesc" style="font-size:13px;color:#64748b;margin-top:4px;"></div>
+        <div id="rOff"  style="font-size:13px;font-weight:600;margin-top:4px;font-family:'IBM Plex Mono',monospace;"></div>
+      </div>
+      <div id="rBadges" style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start;padding-top:4px;"></div>
+    </div>
+
+    <!-- Stat boxes -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="sw('contracts')">Contract Scanner</div>
+      <div class="tab" onclick="sw('technicals')">Technicals</div>
+    </div>
+
+    <!-- Contracts tab -->
+    <div id="tab-contracts">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div id="cSummary" style="font-size:12px;color:#64748b;font-weight:500;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div id="cWarn" style="display:none;" class="banner banner-yellow" style="margin:0;padding:6px 10px;font-size:11px;"></div>
+          <select id="fSel" onchange="applyFilter()">
+            <option value="all">All Contracts</option>
+            <option value="pass">Passing Only</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div class="chdr"><div>Expiry · Strike</div><div>Mid Price</div><div>Δ Delta</div><div>IV</div><div>% Off Hi</div><div>OI / Vol</div><div>Verdict</div></div>
+        <div id="cList" style="max-height:480px;overflow-y:auto;"></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#94a3b8;padding:0 2px;">
+        * <strong>Contract % Off High</strong>: computed from Massive's historical daily aggregates for each option contract.
+        Loads in the background after scan for contracts passing 3+ other gates — click any row to fetch it immediately.
+      </div>
+      <div id="cDetail" style="display:none;margin-top:16px;"></div>
+    </div>
+
+    <!-- Technicals tab -->
+    <div id="tab-technicals" style="display:none;"><div id="techPanel"></div></div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="emptyState" style="text-align:center;padding:64px 0;color:#94a3b8;">
+    <div style="font-size:40px;margin-bottom:12px;">◎</div>
+    <div style="font-size:14px;font-weight:600;color:#64748b;">Enter a ticker to begin</div>
+    <div style="font-size:12px;margin-top:6px;">Auto-scans LEAP contracts 6–24 months out · Powered by Massive</div>
+  </div>
+
+  <!-- Debug log -->
+  <div id="debugWrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;">DEBUG LOG</div>
+      <button onclick="clearDebug()" style="background:none;border:none;font-size:11px;color:#94a3b8;cursor:pointer;font-family:'Inter',sans-serif;">Clear</button>
+    </div>
+    <div id="debugLog"><span class="dim">Initializing...</span></div>
+  </div>
+</div>
+
+<script>
+const S = { contracts:[], filtered:[], stockData:null };
+
+const fmt  = (n,d=2) => n!=null&&!isNaN(n)&&n!==0?Number(n).toFixed(d):"—";
+const fmtP = n       => n!=null&&!isNaN(n)?`${Number(n)>0?"+":""}${Number(n).toFixed(1)}%`:"—";
+const fmtN = n       => n!=null&&!isNaN(n)?Number(n).toLocaleString(undefined,{maximumFractionDigits:0}):"—";
+const fmtB = n       => { if(!n||isNaN(n))return"—"; const v=Math.abs(n); if(v>=1e12)return`$${(n/1e12).toFixed(2)}T`; if(v>=1e9)return`$${(n/1e9).toFixed(2)}B`; if(v>=1e6)return`$${(n/1e6).toFixed(2)}M`; return`$${Number(n).toLocaleString()}`; };
+const addDays  = (s,n) => { const d=new Date(s); d.setDate(d.getDate()+n); return d.toISOString().split("T")[0]; };
+const todayStr = ()    => new Date().toISOString().split("T")[0];
+const moAway   = s     => (new Date(s)-new Date())/(1000*60*60*24*30);
+
+const TIERS = {
+  mega: {label:"Mega-Cap",    max:40, tix:["AMZN","MSFT","GOOGL","GOOG","AAPL","NVDA","META","NFLX"]},
+  spec: {label:"Speculative", max:70, tix:["RKLB","HOOD","TSLA","PLTR","IONQ","SMCI","AMPX"]},
+};
+function getTier(s){ if(TIERS.mega.tix.includes(s))return TIERS.mega; if(TIERS.spec.tix.includes(s))return TIERS.spec; return{label:"High-Beta",max:60,tix:[]}; }
+
+// ── Fetch via backend proxy ──────────────────────────────────────────────────
+async function massiveFetch(path, params={}) {
+  const qs  = new URLSearchParams(params).toString();
+  const url = `/api/massive/${path}${qs?'?'+qs:''}`;
+  dlog(`→ ${path}${qs?'?'+qs:''}`,"dim");
+  const r    = await fetch(url);
+  const text = await r.text();
+  dlog(`← HTTP ${r.status} (${path})`,"val");
+  if(!r.ok) throw new Error(`Massive ${path}: HTTP ${r.status} — ${text.slice(0,200)}`);
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error(`Massive ${path}: bad JSON — ${text.slice(0,150)}`); }
+}
+
+// ── Fetch full OHLC history for one contract using its Massive ticker (e.g. O:MSFT260116C00390000)
+async function fetchContractHistory(occTicker){
+  if(!occTicker) return {occ:null, high:null, dataPoints:0};
+  const start = "2020-01-01";
+  const end   = new Date().toISOString().split("T")[0];
+  dlog(`Fetching history for ${occTicker}...`,"dim");
+  try{
+    const d = await massiveFetch(`v2/aggs/ticker/${occTicker}/range/1/day/${start}/${end}`, {adjusted:"true", sort:"asc", limit:"5000"});
+    const arr = d?.results ?? [];
+    if(!arr.length){
+      dlog(`No history returned for ${occTicker}`,"warn");
+      return {occ:occTicker, high:null, dataPoints:0};
+    }
+    const allTimeHigh = Math.max(...arr.map(x=>x.h||0));
+    dlog(`${occTicker}: ${arr.length} days · all-time high $${allTimeHigh.toFixed(2)}`,"ok");
+    return {occ:occTicker, high:allTimeHigh, dataPoints:arr.length};
+  }catch(e){
+    dlog(`History fetch failed for ${occTicker}: ${e.message}`,"err");
+    return {occ:occTicker, high:null, dataPoints:0};
+  }
+}
+
+// ── Debug ────────────────────────────────────────────────────────────────────
+function dlog(msg,cls="dim"){
+  const el=document.getElementById("debugLog");
+  const ts=new Date().toLocaleTimeString("en-US",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  if(el.innerHTML.includes("Initializing")||el.innerHTML.includes("Cleared.")) el.innerHTML="";
+  el.innerHTML+=`<div><span style="color:#334155">${ts}</span>  <span class="${cls}">${msg}</span></div>`;
+  el.scrollTop=el.scrollHeight;
+}
+function clearDebug(){ document.getElementById("debugLog").innerHTML='<span class="dim">Cleared.</span>'; }
+
+// ── UI ───────────────────────────────────────────────────────────────────────
+function showErr(m){ const el=document.getElementById("errBox"); el.innerHTML=m; el.style.display="block"; }
+function hideErr(){ document.getElementById("errBox").style.display="none"; }
+function setLoad(show,msg,pct){
+  document.getElementById("loadBox").style.display=show?"block":"none";
+  if(msg) document.getElementById("loadMsg").textContent=msg;
+  document.getElementById("pFill").style.width=(pct||0)+"%";
+}
+function sw(name){
+  ["contracts","technicals"].forEach(t=>document.getElementById("tab-"+t).style.display=t===name?"block":"none");
+  document.querySelectorAll(".tab").forEach((el,i)=>{ if(["contracts","technicals"][i]===name)el.classList.add("active"); else el.classList.remove("active"); });
+}
+
+// ── Server check ─────────────────────────────────────────────────────────────
+async function checkServer(){
+  const banner=document.getElementById("serverBanner");
+  try{
+    const d=await (await fetch("/api/status")).json();
+    if(d.massive){
+      document.getElementById("tradierDot").style.background="#22c55e";
+      document.getElementById("tradierStatus").style.color="#15803d";
+      banner.className="banner banner-green";
+      banner.textContent="✓ Server connected · Massive active";
+      document.getElementById("scanBtn").disabled=false;
+      dlog("Server OK · Massive key confirmed","ok");
+    } else {
+      banner.className="banner banner-red";
+      banner.textContent="✗ MASSIVE_API_KEY missing — stop server, add key to .env, restart.";
+      dlog("✗ Massive key not configured on server","err");
+    }
+  }catch(e){
+    banner.className="banner banner-red";
+    banner.textContent="✗ Cannot reach server — make sure: node server.js is running in Terminal.";
+    dlog("✗ Server unreachable: "+e.message,"err");
+  }
+}
+
+// ── MAIN SCAN ────────────────────────────────────────────────────────────────
+async function scan(){
+  const sym=document.getElementById("tickerInput").value.trim().toUpperCase();
+  if(!sym){ showErr("Enter a ticker first."); return; }
+  hideErr();
+  document.getElementById("resultsView").style.display="none";
+  document.getElementById("emptyState").style.display="none";
+  document.getElementById("cDetail").style.display="none";
+  document.getElementById("scanBtn").disabled=true;
+  setLoad(true,"Fetching price history from Massive...",5);
+  dlog(`──── SCAN: ${sym} ────`,"ok");
+
+  try{
+    // ── Step 1: Price + 52W high/low via 1-year daily aggregates ────────────
+    const todayD  = todayStr();
+    const yearAgo = (()=>{ const d=new Date(); d.setDate(d.getDate()-370); return d.toISOString().split("T")[0]; })();
+    const agg = await massiveFetch(`v2/aggs/ticker/${sym}/range/1/day/${yearAgo}/${todayD}`, {adjusted:"true", sort:"desc", limit:"400"});
+    dlog("Aggregates response: "+JSON.stringify(agg).slice(0,300),"val");
+    const bars = agg?.results ?? [];
+    if(!bars.length) throw new Error(`No price history for "${sym}" — check the ticker.`);
+
+    const price  = bars[0].c || 0;
+    const high52 = Math.max(...bars.map(b=>b.h||0)) || null;
+    const low52  = Math.min(...bars.map(b=>b.l||Infinity)) || null;
+    const stockOff  = (high52 && price) ? ((price - high52) / high52 * 100) : null;
+    const volume    = bars[0].v || null;
+
+    dlog(`Parsed → price:$${price} · 52Whi:$${high52} · 52Wlo:$${low52} · offHigh:${fmtP(stockOff)}`,"ok");
+    if(!high52) dlog("⚠ 52W high came back null — check aggregates response above","warn");
+    if(!price)  dlog("⚠ Price came back 0 — check aggregates response above","warn");
+
+    S.stockData = {sym,price,high52,low52,stockOff,change:null,changePct:null,volume,avgVol:null,pe:null,eps:null,mktCap:null,desc:sym,tier:getTier(sym)};
+
+    // ── Step 2: Full option chain — greeks + IV + quotes in ONE call ────────
+    setLoad(true,"Fetching option chain from Massive...",30);
+    const minExp = addDays(todayD,180);
+    const maxExp = addDays(todayD,730);
+    const chd = await massiveFetch(`v3/snapshot/options/${sym}`, {
+      "expiration_date.gte": minExp,
+      "expiration_date.lte": maxExp,
+      contract_type: "call",
+      limit: "250"
+    });
+    dlog("Chain response: "+JSON.stringify(chd).slice(0,300),"val");
+    const results = chd?.results ?? [];
+    if(!results.length) throw new Error(`No LEAP call contracts found for ${sym} between ${minExp} and ${maxExp}. Check your Massive plan includes options data.`);
+
+    const minStrike = price * 0.70, maxStrike = price * 1.30;
+    let contracts = results
+      .filter(o => o.details?.strike_price >= minStrike && o.details?.strike_price <= maxStrike)
+      .map(o=>{
+        const g  = o.greeks;
+        const iv = (o.implied_volatility!=null) ? o.implied_volatility*100 : null;
+        const bid = o.last_quote?.bid || 0, ask = o.last_quote?.ask || 0;
+        const mid = (bid>0&&ask>0) ? (bid+ask)/2 : (o.day?.close || o.last_trade?.price || null);
+        return {
+          expiry: o.details?.expiration_date,
+          strike: o.details?.strike_price,
+          ticker: o.details?.ticker,
+          price: mid, bid: bid||null, ask: ask||null,
+          delta: g?.delta ?? null, iv,
+          oi: o.open_interest, volume: o.day?.volume,
+          contractHigh: null, contractOff: null,
+          greeksOk: !!g && g.delta!=null
+        };
+      });
+    dlog(`Chain complete: ${contracts.length} calls in strike range`,"ok");
+
+    // ── Step 4: Evaluate gates ───────────────────────────────────────────────
+    setLoad(true,"Evaluating framework gates...",90);
+    const tier = getTier(sym);
+    contracts = contracts
+      .filter(c => c.expiry && c.strike && moAway(c.expiry)>=6)
+      .map(c=>{
+        const checks = {
+          stockOff:    stockOff != null && stockOff <= -10,
+          delta:       c.delta  != null && c.delta  >= 0.60,
+          iv:          c.iv     != null && c.iv     <  tier.max,
+          expiry:      moAway(c.expiry) >= 6 && moAway(c.expiry) <= 24,
+          contractOff: c.contractOff != null && c.contractOff <= -30,
+        };
+        const pc = Object.values(checks).filter(Boolean).length;
+        return{...c, checks, passCount:pc, allPass:Object.values(checks).every(Boolean), tier};
+      })
+      .sort((a,b)=>b.allPass-a.allPass||b.passCount-a.passCount);
+
+    S.contracts=contracts; S.filtered=contracts;
+    const passing = contracts.filter(c=>c.allPass).length;
+    const gOk     = contracts.filter(c=>c.greeksOk).length;
+    dlog(`Result: ${contracts.length} contracts · ${passing} pass all 5 gates · ${gOk} have Greeks`,"ok");
+
+    setLoad(false);
+    renderAll();
+    // Kick off background history enrichment for high-quality contracts
+    enrichContractHistory();
+
+  }catch(e){
+    setLoad(false);
+    dlog("✗ SCAN FAILED: "+e.message,"err");
+    showErr(`<strong>Scan failed:</strong> ${e.message}<br/><span style="font-size:11px;">See debug log below for details.</span>`);
+    document.getElementById("emptyState").style.display="block";
+  }finally{
+    document.getElementById("scanBtn").disabled=false;
+  }
+}
+
+// ── BACKGROUND ENRICHMENT ────────────────────────────────────────────────────
+// After scan completes, auto-fetch history for contracts passing 3+ other gates.
+// Updates cells live as each result comes in — no page reload needed.
+async function enrichContractHistory(){
+  const d = S.stockData;
+  if(!d) return;
+
+  // Target: contracts with 3+ gates passing (excluding contractOff gate)
+  const targets = S.contracts
+    .map((c,i) => ({c, i}))
+    .filter(({c}) => {
+      const otherGates = [c.checks.stockOff, c.checks.delta, c.checks.iv, c.checks.expiry];
+      return otherGates.filter(Boolean).length >= 3;
+    });
+
+  if(!targets.length){ dlog("No contracts qualify for background history fetch (need 3+ other gates)","warn"); return; }
+  dlog(`Background enrichment: fetching history for ${targets.length} contracts (3+ gates)...`,"ok");
+
+  // Process in small batches of 3 to avoid rate limiting
+  const BATCH = 3;
+  for(let b=0; b<targets.length; b+=BATCH){
+    const batch = targets.slice(b, b+BATCH);
+    await Promise.all(batch.map(async ({c, i}) => {
+      if(c.contractHistHigh != null) return; // already fetched (e.g. user clicked it)
+      const hist = await fetchContractHistory(c.ticker);
+      const contractHigh = hist.high;
+      const contractOff  = (contractHigh && contractHigh > 0 && c.price)
+        ? ((c.price - contractHigh) / contractHigh * 100) : null;
+
+      // Store on contract object
+      c.contractHistHigh = contractHigh;
+      c.contractHistOff  = contractOff;
+      c.contractHistPts  = hist.dataPoints;
+      c.checks.contractOff = contractOff != null && contractOff <= -30;
+      c.allPass   = Object.values(c.checks).every(Boolean);
+      c.passCount = Object.values(c.checks).filter(Boolean).length;
+
+      // Find this contract's index in the filtered list
+      const fi = S.filtered.indexOf(c);
+      if(fi === -1) return;
+
+      // Update the % Off ATH cell in the table
+      const offCell = document.querySelector(`.offath-cell[data-ci="${fi}"]`);
+      if(offCell){
+        if(contractOff != null){
+          offCell.style.color = contractOff <= -30 ? "#15803d" : "#dc2626";
+          offCell.innerHTML   = fmtP(contractOff);
+        } else {
+          offCell.style.color = "#94a3b8";
+          offCell.innerHTML   = "<span style='font-size:10px;'>—</span>";
+        }
+      }
+
+      // Update verdict cell
+      const rowEl  = document.getElementById("cr-"+fi);
+      const rowEl2 = rowEl; // same element
+      if(rowEl){
+        rowEl.className = `crow ${c.allPass?"pass":"fail"}${rowEl.classList.contains("sel")?" sel":""}`;
+        const verdEl = rowEl.querySelector(".verdict-cell");
+        if(verdEl){
+          if(c.allPass){
+            verdEl.innerHTML = `<span class="badge badge-green">✓ Valid</span>`;
+          } else {
+            const fails=[];
+            if(!c.checks.stockOff)    fails.push("Pullback");
+            if(!c.checks.contractOff) fails.push("-30%");
+            if(!c.checks.delta)       fails.push("Delta");
+            if(!c.checks.iv)          fails.push("IV");
+            if(!c.checks.expiry)      fails.push("Expiry");
+            verdEl.innerHTML = `<span style="font-size:10px;color:#94a3b8;">${c.passCount}/5 · ${fails[0]||""}</span>`;
+          }
+        }
+      }
+    }));
+    // Small pause between batches to be kind to the API
+    if(b + BATCH < targets.length) await new Promise(r=>setTimeout(r,300));
+  }
+
+  // After all done, update summary counts
+  const passing = S.contracts.filter(c=>c.allPass).length;
+  document.getElementById("cSummary").textContent = `${S.contracts.length} contracts scanned · ${passing} pass all 5 gates`;
+  document.getElementById("rBadges").innerHTML = document.getElementById("rBadges").innerHTML
+    .replace(/\d+ pass all gates/, `${passing} pass all gates`)
+    .replace(/badge-green">[\d]+ pass/, passing>0?`badge-green">${passing} pass`:`badge-gray">${passing} pass`);
+
+  // Update stat box
+  const statBoxes = document.querySelectorAll(".stat-box");
+  if(statBoxes[3]){
+    statBoxes[3].querySelector(".stat-val").textContent = String(S.contracts.length);
+    statBoxes[3].querySelector(".stat-sub").textContent = `${passing} pass all 5 gates`;
+  }
+  dlog(`Enrichment complete — ${passing} contracts now pass all 5 gates`,"ok");
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderAll(){
+  const d=S.stockData, tier=d.tier;
+
+  document.getElementById("rTicker").textContent = d.sym;
+  document.getElementById("rPrice").textContent  = d.price ? `$${fmt(d.price)}` : "—";
+  document.getElementById("rDesc").textContent   = d.desc || "";
+
+  const changeEl = document.getElementById("rChange");
+  if(d.changePct != null){
+    changeEl.textContent = `${d.changePct>0?"+":""}${fmt(d.changePct,2)}%`;
+    changeEl.style.cssText = d.changePct>=0
+      ? "font-size:13px;font-weight:600;padding:3px 8px;border-radius:5px;background:#dcfce7;color:#15803d;"
+      : "font-size:13px;font-weight:600;padding:3px 8px;border-radius:5px;background:#fee2e2;color:#dc2626;";
+  }
+
+  const off = document.getElementById("rOff");
+  if(d.stockOff != null){
+    off.textContent = `${fmtP(d.stockOff)} from 52W high  ·  ▲ $${fmt(d.high52)}  ▼ $${fmt(d.low52)}`;
+    off.style.color = d.stockOff <= -10 ? "#15803d" : "#dc2626";
+  } else {
+    off.textContent = d.high52 ? `52W: ▲$${fmt(d.high52)} ▼$${fmt(d.low52)}` : "52W data unavailable";
+    off.style.color = "#94a3b8";
+  }
+
+  const passing = S.contracts.filter(c=>c.allPass).length;
+  document.getElementById("rBadges").innerHTML = `
+    <span class="badge ${d.stockOff!=null&&d.stockOff<=-10?"badge-green":"badge-red"}">${d.stockOff!=null&&d.stockOff<=-10?"✓ Pullback":"✗ No Pullback"}</span>
+    <span class="badge badge-blue">${tier.label} · IV &lt; ${tier.max}%</span>
+    <span class="badge ${passing>0?"badge-green":"badge-gray"}">${passing} pass all gates</span>`;
+
+  // Stat boxes
+  const rng = (d.high52&&d.low52&&d.price) ? ((d.price-d.low52)/(d.high52-d.low52)*100) : null;
+  document.getElementById("statGrid").innerHTML = [
+    {l:"Current Price",  v:d.price?`$${fmt(d.price)}`:"—",  s:d.changePct!=null?`${d.changePct>0?"+":""}${fmt(d.changePct,2)}% today`:""},
+    {l:"52W High",       v:d.high52?`$${fmt(d.high52)}`:"—", s:d.low52?`Low: $${fmt(d.low52)}`:"",
+      col: d.stockOff!=null&&d.stockOff<=-10?"#15803d":d.stockOff!=null?"#dc2626":""},
+    {l:"% Off 52W High", v:d.stockOff!=null?fmtP(d.stockOff):"—",
+      s:d.stockOff!=null&&d.stockOff<=-10?"✓ Gate: PASS":"d.stockOff!=null?\"✗ Gate: FAIL\":\"\"",
+      col:d.stockOff!=null&&d.stockOff<=-10?"#15803d":d.stockOff!=null?"#dc2626":""},
+    {l:"Contracts Scanned", v:String(S.contracts.length), s:`${passing} pass all 5 gates`},
+  ].map(x=>`<div class="stat-box">
+    <div class="stat-label">${x.l}</div>
+    <div class="stat-val" style="${x.col?`color:${x.col}`:""};">${x.v}</div>
+    ${x.s?`<div class="stat-sub">${x.s}</div>`:""}
+  </div>`).join("");
+
+  document.getElementById("cSummary").textContent = `${S.contracts.length} contracts scanned · ${passing} pass all 5 gates`;
+  const gOk = S.contracts.filter(c=>c.greeksOk).length;
+  const wEl = document.getElementById("cWarn");
+  if(gOk===0 && S.contracts.length>0){
+    wEl.style.display="block";
+    wEl.textContent="⚠ Delta and IV are null — Greeks or quotes may be unavailable depending on your Massive plan tier.";
+  } else { wEl.style.display="none"; }
+
+  renderContracts(S.filtered);
+  renderTechnicals();
+  document.getElementById("resultsView").style.display="block";
+  document.getElementById("emptyState").style.display="none";
+  sw("contracts");
+}
+
+function applyFilter(){
+  S.filtered = document.getElementById("fSel").value==="pass" ? S.contracts.filter(c=>c.allPass) : S.contracts;
+  renderContracts(S.filtered);
+}
+
+function renderContracts(list){
+  const el = document.getElementById("cList");
+  if(!list.length){
+    el.innerHTML=`<div style="padding:32px;text-align:center;color:#94a3b8;font-size:13px;">No contracts match this filter.</div>`;
+    return;
+  }
+  el.innerHTML = list.map((c,i)=>{
+    const mo   = moAway(c.expiry).toFixed(1);
+    const dCol = c.delta!=null ? (c.delta>=0.6?"#15803d":"#dc2626") : "#94a3b8";
+    const iCol = c.iv!=null    ? (c.iv<c.tier.max?"#15803d":"#dc2626") : "#94a3b8";
+    const oCol = c.contractOff!=null ? (c.contractOff<=-30?"#15803d":"#dc2626") : "#94a3b8";
+
+    let verd;
+    if(c.allPass){
+      verd=`<span class="badge badge-green">✓ Valid</span>`;
+    } else {
+      const fails=[];
+      if(!c.checks.stockOff)    fails.push("Stock pullback");
+      if(!c.checks.delta)       fails.push("Delta");
+      if(!c.checks.iv)          fails.push("IV");
+      if(!c.checks.expiry)      fails.push("Expiry");
+      if(!c.checks.contractOff) fails.push("Contract -30%");
+      verd=`<span style="font-size:10px;color:#94a3b8;">${c.passCount}/5 · ${fails[0]||""}</span>`;
+    }
+
+    return`<div class="crow ${c.allPass?"pass":"fail"}" onclick="selC(${i})" id="cr-${i}">
+      <div>
+        <span style="color:#64748b;font-size:11px;font-family:'IBM Plex Mono',monospace;">${c.expiry}</span>
+        &nbsp;
+        <span style="font-weight:700;color:#1a1d23;font-family:'IBM Plex Mono',monospace;">$${fmt(c.strike,0)}</span>
+        &nbsp;
+        <span style="font-size:10px;color:#94a3b8;">${mo}mo</span>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:#1a1d23;">${c.price!=null?"$"+fmt(c.price):"—"}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${dCol};">${c.delta!=null?fmt(c.delta,3):"—"}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${iCol};">${c.iv!=null?fmt(c.iv,1)+"%":"—"}</div>
+      <div class="offath-cell" data-ci="${i}" style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${oCol};">${c.contractHistOff!=null?fmtP(c.contractHistOff):c.contractOff!=null?fmtP(c.contractOff):"<span style='color:#cbd5e1;font-size:10px;'>…</span>"}</div>
+      <div style="font-size:11px;color:#94a3b8;">${c.oi!=null?fmtN(c.oi):"—"} / ${c.volume!=null?fmtN(c.volume):"—"}</div>
+      <div class="verdict-cell">${verd}</div>
+    </div>`;
+  }).join("");
+}
+
+async function selC(i){
+  document.querySelectorAll(".crow").forEach(r=>r.classList.remove("sel"));
+  document.getElementById("cr-"+i)?.classList.add("sel");
+  const c=S.filtered[i], d=S.stockData, tier=c.tier;
+  const det=document.getElementById("cDetail");
+  det.style.display="block";
+
+  // Show panel immediately with spinner on contract history gate while we fetch
+  renderDetail(c, d, tier, null, true);
+
+  // Fire history fetch for this specific contract
+  const hist = await fetchContractHistory(c.ticker);
+  const contractHigh = hist.high;
+  const contractOff  = (contractHigh && contractHigh > 0 && c.price)
+    ? ((c.price - contractHigh) / contractHigh * 100) : null;
+  // Update the contract's check with real data
+  c.contractHistHigh = contractHigh;
+  c.contractHistOff  = contractOff;
+  c.contractHistPts  = hist.dataPoints;
+  c.checks.contractOff = contractOff != null && contractOff <= -30;
+  c.allPass = Object.values(c.checks).every(Boolean);
+  c.passCount = Object.values(c.checks).filter(Boolean).length;
+  // Re-render detail with real data
+  renderDetail(c, d, tier, hist, false);
+  // Update the row verdict in the table too
+  const rowEl = document.getElementById("cr-"+i);
+  if(rowEl){
+    const verdEl = rowEl.querySelector(".verdict-cell");
+    if(verdEl){
+      if(c.allPass) verdEl.innerHTML=`<span class="badge badge-green">✓ Valid</span>`;
+      else verdEl.innerHTML=`<span style="font-size:10px;color:#94a3b8;">${c.passCount}/5</span>`;
+    }
+  }
+}
+
+function renderDetail(c, d, tier, hist, loading){
+  const det = document.getElementById("cDetail");
+  const contractHighDisp = c.contractHistHigh ?? c.contractHigh;
+  const contractOffDisp  = c.contractHistOff  ?? c.contractOff;
+  const contractOffCheck = contractOffDisp != null && contractOffDisp <= -30;
+
+  const gRows=[
+    {l:"Stock ≥ 10% Off 52W High",
+     sub:d.stockOff!=null?`${fmtP(d.stockOff)} off high · 52W high $${fmt(d.high52)}`:"52W high unavailable",
+     pass:c.checks.stockOff, na:d.stockOff==null},
+    {l:"Contract Price ≥ 30% Off All-Time High",
+     sub: loading
+       ? "⏳ Fetching contract history from Massive..."
+       : contractOffDisp!=null
+         ? `${fmtP(contractOffDisp)} off all-time high · ATH: $${fmt(contractHighDisp)} · ${c.contractHistPts||0} trading days of data · OCC: ${c.ticker}`
+         : hist?.dataPoints===0
+           ? `No trade history found for this contract yet (OCC: ${c.ticker}) — contract may not have started trading`
+           : "History unavailable",
+     pass: loading ? null : contractOffDisp!=null ? contractOffCheck : null,
+     na: !loading && contractOffDisp==null},
+    {l:"Delta ≥ 0.60",
+     sub:c.delta!=null?`Delta: ${fmt(c.delta,3)}`:"No Greeks — market hours only (9:30am–4pm ET)",
+     pass:c.delta!=null?c.checks.delta:null, na:c.delta==null},
+    {l:`IV < ${tier.max}% (${tier.label})`,
+     sub:c.iv!=null?`IV: ${fmt(c.iv,1)}%`:"No Greeks — market hours only",
+     pass:c.iv!=null?c.checks.iv:null, na:c.iv==null},
+    {l:"Expiry 6–24 Months Out",
+     sub:`${moAway(c.expiry).toFixed(1)} months · ${c.expiry}`,
+     pass:c.checks.expiry},
+  ];
+
+  const allPassDisp = contractOffDisp!=null ? contractOffCheck && c.checks.stockOff && (c.delta==null||c.checks.delta) && (c.iv==null||c.checks.iv) && c.checks.expiry : c.allPass;
+  const contractOffCol = loading ? "#94a3b8" : contractOffDisp!=null ? (contractOffCheck?"#15803d":"#dc2626") : "#94a3b8";
+  const contractOffVal = loading ? "…" : contractOffDisp!=null ? fmtP(contractOffDisp) : "—";
+
+  det.innerHTML=`<div class="card" style="overflow:hidden;">
+    <div class="card-header">
+      <div style="font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${d.sym} ${c.expiry} $${fmt(c.strike,0)} Call</div>
+      <span class="badge ${allPassDisp?"badge-green":"badge-red"}">${allPassDisp?"✓ Valid Entry — All 5 Gates Pass":"✗ Wait — Not All Gates Pass"}</span>
+    </div>
+    <div class="detail-grid">
+      ${[
+        {l:"Mid Price",          v:c.price!=null?"$"+fmt(c.price):"—",              col:"#1a1d23"},
+        {l:"Bid / Ask",          v:c.bid!=null?`$${fmt(c.bid)} / $${fmt(c.ask)}`:"—", col:"#1a1d23"},
+        {l:"Delta",              v:c.delta!=null?fmt(c.delta,3):"—",                col:c.delta!=null?(c.delta>=0.6?"#15803d":"#dc2626"):"#94a3b8"},
+        {l:"IV",                 v:c.iv!=null?fmt(c.iv,1)+"%":"—",                  col:c.iv!=null?(c.iv<tier.max?"#15803d":"#dc2626"):"#94a3b8"},
+        {l:"Contract % Off ATH", v:contractOffVal,                                  col:contractOffCol},
+      ].map(x=>`<div class="detail-cell">
+        <div class="detail-label">${x.l}</div>
+        <div class="detail-val" style="color:${x.col};">${x.v}</div>
+      </div>`).join("")}
+    </div>
+    <div style="padding:4px 18px;">
+      ${gRows.map(g=>{
+        const pass=g.loading?null:(g.na?null:g.pass);
+        const iconCls = g.loading?"gicon-warn":pass===true?"gicon-pass":pass===false?"gicon-fail":g.na?"gicon-na":"gicon-warn";
+        const icon    = g.loading?"…":pass===true?"✓":pass===false?"✗":"·";
+        const subCol  = g.loading?"#a16207":g.na?"#94a3b8":pass===false?"#dc2626":"#64748b";
+        return`<div class="gate">
+          <div class="gicon ${iconCls}">${icon}</div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#1a1d23;">${g.l}</div>
+            <div style="font-size:11px;color:${subCol};margin-top:2px;">${g.sub}</div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+    ${c.oi!=null?`<div style="padding:10px 18px;border-top:1px solid #f0f2f5;font-size:11px;color:#94a3b8;">Open Interest: <strong style="color:#64748b;">${fmtN(c.oi)}</strong> &nbsp;·&nbsp; Volume: <strong style="color:#64748b;">${fmtN(c.volume)}</strong> &nbsp;·&nbsp; Months Out: <strong style="color:#64748b;">${moAway(c.expiry).toFixed(1)}</strong></div>`:""}
+  </div>`;
+}
+
+function renderTechnicals(){
+  const d=S.stockData, tier=d.tier;
+  const rng = (d.high52&&d.low52&&d.price) ? ((d.price-d.low52)/(d.high52-d.low52)*100) : null;
+
+  const cells=[
+    {l:"Current Price",   v:d.price?`$${fmt(d.price)}`:"—",         s:d.changePct!=null?`${d.changePct>0?"+":""}${fmt(d.changePct,2)}% today`:"",  col:""},
+    {l:"52W High",        v:d.high52?`$${fmt(d.high52)}`:"—",       s:"",  col:d.stockOff!=null&&d.stockOff<=-10?"#15803d":""},
+    {l:"52W Low",         v:d.low52?`$${fmt(d.low52)}`:"—",        s:"",  col:""},
+    {l:"% Off 52W High",  v:d.stockOff!=null?fmtP(d.stockOff):"—", s:d.stockOff!=null?(d.stockOff<=-10?"✓ Pullback gate: PASS":"✗ Pullback gate: FAIL"):"", col:d.stockOff!=null&&d.stockOff<=-10?"#15803d":d.stockOff!=null?"#dc2626":""},
+    {l:"P/E Ratio",       v:d.pe?fmt(d.pe,1)+"x":"—",              s:d.eps?`EPS: $${fmt(d.eps,2)}`:"", col:""},
+    {l:"Market Cap",      v:fmtB(d.mktCap),                        s:"",  col:""},
+    {l:"Volume",          v:fmtN(d.volume),                        s:d.avgVol?`Avg: ${fmtN(d.avgVol)}`:"", col:""},
+    {l:"IV Threshold",    v:`< ${tier.max}%`,                      s:tier.label, col:"#1d4ed8"},
+  ];
+
+  document.getElementById("techPanel").innerHTML=`
+    <div style="margin-bottom:16px;font-size:13px;font-weight:600;color:#64748b;">${d.desc}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      ${cells.map(c=>`<div class="stat-box">
+        <div class="stat-label">${c.l}</div>
+        <div class="stat-val" style="${c.col?`color:${c.col}`:""};font-size:16px;">${c.v}</div>
+        ${c.s?`<div class="stat-sub">${c.s}</div>`:""}
+      </div>`).join("")}
+    </div>
+    ${rng!=null?`<div class="card" style="padding:16px 18px;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">52-Week Price Range Position</div>
+      <div class="range-bar" style="height:8px;">
+        <div class="range-fill" style="width:${rng.toFixed(0)}%;background:${rng<30?"#22c55e":rng>70?"#ef4444":"#f59e0b"};"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8;font-family:'IBM Plex Mono',monospace;">
+        <span>$${fmt(d.low52)}</span>
+        <span style="font-weight:600;color:${rng<30?"#15803d":rng>70?"#dc2626":"#a16207"};">Current: ${rng.toFixed(0)}% from 52W low</span>
+        <span>$${fmt(d.high52)}</span>
+      </div>
+    </div>`:""}
+    <div class="banner banner-yellow">
+      <strong>Macro context:</strong> VIX ~29–35 · Fear &amp; Greed: 26 · Elevated volatility — confirm IV thresholds before executing any position.
+    </div>`;
+}
+
+checkServer();
+</script>
+</body>
+</html>
