@@ -33,9 +33,9 @@ module.exports = async function handler(req, res) {
     return res.status(503).json({ error: 'MASSIVE_API_KEY not configured in Vercel environment variables' });
   }
 
-  // In Vercel, req.url is relative to the function — strip leading slash only
   const rawUrl  = req.url || '/';
-  const subPath = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl;
+  const prefix  = '/api/massive/';
+  const subPath = rawUrl.startsWith(prefix) ? rawUrl.slice(prefix.length) : rawUrl.slice(1);
   const sep     = subPath.includes('?') ? '&' : '?';
   const target  = `https://api.massive.com/${subPath}${sep}apiKey=${MASSIVE_KEY}`;
 
