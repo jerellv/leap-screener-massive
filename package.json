@@ -1,0 +1,8 @@
+{
+  "name": "leap-screener-massive",
+  "version": "1.0.0",
+  "description": "LEAP Options Screener — Massive (Polygon.io) data, self-hosted or Vercel-hosted",
+  "engines": {
+    "node": ">=18"
+  }
+}

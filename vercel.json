@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/status", "dest": "/api/status.js" },
+    { "src": "/api/massive/(.*)", "dest": "/api/massive.js" }
+  ]
+}
